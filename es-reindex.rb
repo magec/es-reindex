@@ -20,6 +20,7 @@ Usage:
     - -r - remove the index in the new location first
     - -f - specify frame size to be obtained with one fetch during scrolling
     - -u - update existing documents (default: only create non-existing)
+    - -s - skip mapping recreation (the target index must exists)
     - optional source/destination urls default to http://127.0.0.1:9200
 \n"
   exit 1
@@ -27,13 +28,14 @@ end
 
 Oj.default_options = {:mode => :compat}
 
-remove, update, frame, src, dst = false, false, 1000, nil, nil
+remove, update, frame, src, dst, skip_mapping = false, false, 1000, nil, nil, nil
 
 while ARGV[0]
   case arg = ARGV.shift
   when '-r' then remove = true
   when '-f' then frame = ARGV.shift.to_i
   when '-u' then update = true
+  when '-s' then skip_mapping = true
   else
     u = arg.chomp '/'
     !src ? (src = u) : !dst ? (dst = u) :
@@ -122,7 +124,7 @@ unless retried_request(:get, "#{durl}/#{didx}/_recovery")
     else
       puts 'OK.'
     end
-  }
+  } unless skip_mapping
 end
 
 printf "Copying '%s/%s' to '%s/%s'... \n", surl, sidx, durl, didx
